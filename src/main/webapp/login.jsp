@@ -21,6 +21,13 @@
         .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     </style>
+    <script>
+
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    </script>
 </head>
 <body>
 
@@ -35,9 +42,9 @@
         String msg = request.getParameter("msg");
         if (error != null) {
     %>
-        <div class="alert alert-danger"><%= error %></div>
+    <div class="alert alert-danger"><%= error.replaceAll("[<>]", "") %></div>
     <% } else if (msg != null) { %>
-        <div class="alert alert-success"><%= msg %></div>
+    <div class="alert alert-success"><%= msg.replaceAll("[<>]", "") %></div>
     <% } %>
 
     <form action="<%=request.getContextPath()%>/auth" method="POST" onsubmit="return validateLogin()">
@@ -45,12 +52,12 @@
 
         <div class="form-group">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required minlength="3" maxlength="50">
         </div>
 
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="4">
         </div>
 
         <button type="submit" class="btn-login">Sign In</button>
@@ -59,12 +66,36 @@
 
 <script>
     function validateLogin() {
-        const u = document.getElementById("username").value.trim();
-        const p = document.getElementById("password").value.trim();
-        if (u === "" || p === "") {
-            alert("Please fill in both Username and Password fields.");
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+
+        const u = usernameInput.value.trim();
+        const p = passwordInput.value.trim();
+
+        if (u === "") {
+            alert("Username cannot be empty or contain only whitespace.");
+            usernameInput.focus();
             return false;
         }
+
+        if (u.length < 3) {
+            alert("Username must be at least 3 characters long.");
+            usernameInput.focus();
+            return false;
+        }
+
+        if (p === "") {
+            alert("Password cannot be empty.");
+            passwordInput.focus();
+            return false;
+        }
+
+        if (p.length < 4) {
+            alert("Password must be at least 4 characters long.");
+            passwordInput.focus();
+            return false;
+        }
+
         return true;
     }
 </script>

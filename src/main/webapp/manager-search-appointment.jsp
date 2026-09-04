@@ -13,6 +13,10 @@
 
     String searchQuery = request.getParameter("searchQuery");
     String filterDate = request.getParameter("filterDate");
+
+    String safeUsername = (user.getUsername() != null) ? user.getUsername().replaceAll("[<>]", "") : "Manager";
+    String safeSearchQuery = (searchQuery != null) ? searchQuery.trim().replaceAll("[<>]", "") : "";
+    String safeFilterDate = (filterDate != null) ? filterDate.trim().replaceAll("[<>]", "") : "";
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,7 +39,9 @@
         .search-box-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .search-grid { display: grid; grid-template-columns: 2fr 1fr auto; gap: 15px; align-items: center; }
         .search-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; width: 100%; }
+        .search-input:focus { border-color: #1abc9c; }
         .btn-search { background-color: #1abc9c; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-search:hover { background-color: #16a085; }
         table { width: 100%; border-collapse: collapse; text-align: left; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         th { background-color: #2c3e50; color: white; padding: 14px 16px; font-size: 14px; font-weight: 600; }
         td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #e2e8f0; color: #34495e; vertical-align: middle; }
@@ -44,6 +50,22 @@
         .btn-cancel:hover { background-color: #c0392b; }
         .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; background-color: #d1fae5; color: #065f46; }
     </style>
+    <script>
+        function validateSearchForm() {
+            let searchQuery = document.getElementById("searchQueryInput").value.trim();
+            if (searchQuery.length > 0 && searchQuery.length < 2) {
+                alert("Search query must be at least 2 characters long if provided.");
+                document.getElementById("searchQueryInput").focus();
+                return false;
+            }
+            if (searchQuery.length > 50) {
+                alert("Search query is too long. Maximum 50 characters allowed.");
+                document.getElementById("searchQueryInput").focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
 </head>
 <body>
 
@@ -60,13 +82,13 @@
 <div class="main-content">
     <div class="header-bar">
         <h1>🔍 Search Appointments</h1>
-        <div class="user-badge">User: <strong><%= user.getUsername() %></strong></div>
+        <div class="user-badge">User: <strong><%= safeUsername %></strong></div>
     </div>
 
     <div class="search-box-container">
-        <form action="manager-search-appointment.jsp" method="GET" class="search-grid">
-            <input type="text" name="searchQuery" class="search-input" value="<%= searchQuery != null ? searchQuery : "" %>" placeholder="Search by Patient Name or Contact No...">
-            <input type="date" name="filterDate" class="search-input" value="<%= filterDate != null ? filterDate : "" %>">
+        <form action="manager-search-appointment.jsp" method="GET" class="search-grid" onsubmit="return validateSearchForm()">
+            <input type="text" id="searchQueryInput" name="searchQuery" class="search-input" value="<%= safeSearchQuery %>" placeholder="Search by Patient Name or Contact No..." maxlength="50">
+            <input type="date" name="filterDate" class="search-input" value="<%= safeFilterDate %>">
             <button type="submit" class="btn-search">Search</button>
         </form>
     </div>
@@ -89,21 +111,21 @@
                 String sql = "SELECT a.appointment_number, p.full_name, p.contact_number, a.doctor_id, a.appointment_date, a.appointment_time " +
                         "FROM appointments a JOIN patients p ON a.patient_id = p.patient_id WHERE 1=1";
 
-                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                if (!safeSearchQuery.isEmpty()) {
                     sql += " AND (p.full_name LIKE ? OR p.contact_number LIKE ?)";
                 }
-                if (filterDate != null && !filterDate.trim().isEmpty()) {
+                if (!safeFilterDate.isEmpty()) {
                     sql += " AND a.appointment_date = ?";
                 }
 
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 int paramIndex = 1;
-                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                    stmt.setString(paramIndex++, "%" + searchQuery + "%");
-                    stmt.setString(paramIndex++, "%" + searchQuery + "%");
+                if (!safeSearchQuery.isEmpty()) {
+                    stmt.setString(paramIndex++, "%" + safeSearchQuery + "%");
+                    stmt.setString(paramIndex++, "%" + safeSearchQuery + "%");
                 }
-                if (filterDate != null && !filterDate.trim().isEmpty()) {
-                    stmt.setString(paramIndex++, filterDate);
+                if (!safeFilterDate.isEmpty()) {
+                    stmt.setString(paramIndex++, safeFilterDate);
                 }
 
                 ResultSet rs = stmt.executeQuery();

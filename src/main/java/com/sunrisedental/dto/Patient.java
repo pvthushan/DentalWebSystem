@@ -18,7 +18,7 @@ public class Patient {
         this.email = email;
     }
 
-    // Getters & Setters
+
     public int getPatientId() { return patientId; }
     public void setPatientId(int patientId) { this.patientId = patientId; }
     public String getPatientCode() { return patientCode; }

@@ -8,6 +8,11 @@
         response.sendRedirect("login.jsp?error=Unauthorized+Access");
         return;
     }
+
+
+    String adminName = (user.getFullName() != null && !user.getFullName().trim().isEmpty())
+            ? user.getFullName()
+            : "System Administrator";
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,7 +31,9 @@
         .btn-logout-sidebar { background-color: #ef4444; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: auto; }
 
         .main-content { flex: 1; padding: 30px 40px; }
-        .header-bar h1 { font-size: 24px; color: #0f172a; margin-bottom: 20px; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
+        .header-bar h1 { font-size: 24px; color: #0f172a; }
+        .admin-badge { font-size: 13px; color: #64748b; }
 
         .help-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .help-card h3 { color: #0f172a; font-size: 18px; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
@@ -35,49 +42,50 @@
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>🛡️ Admin Panel</h2>
-        <div class="nav-menu">
-            <a href="admin-dashboard.jsp" class="nav-btn">🏠 Admin Home</a>
-            <a href="admin-staff.jsp" class="nav-btn">👥 Staff Management</a>
-            <a href="admin-logs.jsp" class="nav-btn">📜 System Logs</a>
-            <a href="admin-pricing.jsp" class="nav-btn">⚙️ Treatment & Pricing</a>
-            <a href="admin-reports.jsp" class="nav-btn">📊 Reports</a>
-            <a href="admin-help.jsp" class="nav-btn active">❓ Help Section</a>
-        </div>
-        <a href="auth?action=logout" class="btn-logout-sidebar">Logout Admin</a>
+<div class="sidebar">
+    <h2>🛡️ Admin Panel</h2>
+    <div class="nav-menu">
+        <a href="admin-dashboard" class="nav-btn active">🏠 Admin Home</a>
+        <a href="admin-staff.jsp" class="nav-btn">👥 Staff Management</a>
+        <a href="admin-logs.jsp" class="nav-btn">📜 System Logs</a>
+        <a href="admin-pricing" class="nav-btn">⚙️ Treatment & Pricing</a>
+        <a href="admin-reports" class="nav-btn">📊 Reports</a>
+        <a href="admin-help.jsp" class="nav-btn">❓ Help Section</a>
+    </div>
+    <a href="auth?action=logout" class="btn-logout-sidebar">Logout Admin</a>
+</div>
+
+<div class="main-content">
+    <div class="header-bar">
+        <h1>❓ System Administrator Guidance & Help</h1>
+        <div class="admin-badge">Logged in as: <strong><%= adminName %></strong></div>
     </div>
 
-    <div class="main-content">
-        <div class="header-bar">
-            <h1>❓ System Administrator Guidance & Help</h1>
-        </div>
-
-        <div class="help-card">
-            <h3>👥 Staff & Doctor Management Guide</h3>
-            <ul>
-                <li><strong>Add New User:</strong> Fill in Full Name, Username, Password, and select the appropriate Role (Manager or Receptionist).</li>
-                <li><strong>Manage Doctors:</strong> Switch to the "Manage Doctors" tab to add doctors along with their specializations and consultation fees.</li>
-                <li><strong>Edit / Delete:</strong> Click "Edit" to load user details into the form or "Delete" to permanently remove access.</li>
-            </ul>
-        </div>
-
-        <div class="help-card">
-            <h3>⚙️ Treatment & Pricing Management</h3>
-            <ul>
-                <li><strong>Consultation Fees:</strong> Update individual doctor fees dynamically. Changes reflect immediately across new appointments.</li>
-                <li><strong>Treatment Costs:</strong> Update base fees for procedures such as Root Canal, Extractions, and Fillings.</li>
-            </ul>
-        </div>
-
-        <div class="help-card">
-            <h3>📊 Financial Reports & System Audit Logs</h3>
-            <ul>
-                <li><strong>Audit Logs:</strong> Monitor login history, user creation, and fee updates with precise timestamps.</li>
-                <li><strong>Exporting Data:</strong> Use the "Export Excel" or "Download PDF" buttons on the Reports page to generate financial summaries.</li>
-            </ul>
-        </div>
+    <div class="help-card">
+        <h3>👥 Staff & Doctor Management Guide</h3>
+        <ul>
+            <li><strong>Add New User:</strong> Fill in Full Name, Username, Password, and select the appropriate Role (Manager or Receptionist).</li>
+            <li><strong>Manage Doctors:</strong> Switch to the "Manage Doctors" tab to add doctors along with their specializations and consultation fees.</li>
+            <li><strong>Edit / Delete:</strong> Click "Edit" to load user details into the form or "Delete" to permanently remove access.</li>
+        </ul>
     </div>
+
+    <div class="help-card">
+        <h3>⚙️ Treatment & Pricing Management</h3>
+        <ul>
+            <li><strong>Consultation Fees:</strong> Update individual doctor fees dynamically. Changes reflect immediately across new appointments.</li>
+            <li><strong>Treatment Costs:</strong> Update base fees for procedures such as Root Canal, Extractions, and Fillings.</li>
+        </ul>
+    </div>
+
+    <div class="help-card">
+        <h3>📊 Financial Reports & System Audit Logs</h3>
+        <ul>
+            <li><strong>Audit Logs:</strong> Monitor login history, user creation, and fee updates with precise timestamps.</li>
+            <li><strong>Exporting Data:</strong> Use the "Export Excel" or "Download PDF" buttons on the Reports page to generate financial summaries.</li>
+        </ul>
+    </div>
+</div>
 
 </body>
 </html>

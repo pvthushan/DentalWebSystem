@@ -17,10 +17,22 @@
     double consultationFee = 1500.00;
 
     if ("success".equals(status) && apptIdStr != null) {
-        int apptId = Integer.parseInt(apptIdStr);
-        consultationFee = Double.parseDouble(feeStr);
-        // Fetch appointment details using Appointment ID logic or number
-        // For demonstration, fetching current state
+        try {
+            int apptId = Integer.parseInt(apptIdStr);
+            if (apptId > 0) {
+            }
+        } catch (NumberFormatException e) {
+            apptIdStr = "0";
+        }
+
+        try {
+            if (feeStr != null) {
+                consultationFee = Double.parseDouble(feeStr);
+                if (consultationFee < 0) consultationFee = 0.00;
+            }
+        } catch (NumberFormatException e) {
+            consultationFee = 1500.00;
+        }
     }
 %>
 <!DOCTYPE html>
@@ -37,11 +49,12 @@
         .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
+        .form-group input:focus { border-color: #0076be; }
         .btn-submit { background: #28a745; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 4px; width: 100%; cursor: pointer; }
         .btn-submit:hover { background: #218838; }
 
-        /* Receipt Box Styling */
+
         .receipt-card { background: white; padding: 30px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .receipt-header { text-align: center; border-bottom: 2px dashed #bbb; padding-bottom: 15px; margin-bottom: 20px; }
         .receipt-header h2 { color: #0076be; font-size: 22px; margin-bottom: 5px; }
@@ -55,7 +68,7 @@
         .btn-print { background: #0076be; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 14px; }
         .btn-print:hover { background: #005a93; }
 
-        /* Print Media Query: Hides unnecessary UI elements when printing */
+
         @media print {
             body { background: white; padding: 0; }
             .no-print, .back-link, .card { display: none !important; }
@@ -63,38 +76,56 @@
             .receipt-card { border: none; box-shadow: none; padding: 0; }
         }
     </style>
+    <script>
+        function validateBillingForm() {
+            let apptId = parseInt(document.getElementById('appointmentId').value);
+            let fee = parseFloat(document.getElementById('consultationFee').value);
+
+            if (isNaN(apptId) || apptId <= 0) {
+                alert("Please enter a valid positive Appointment ID.");
+                document.getElementById('appointmentId').focus();
+                return false;
+            }
+
+            if (isNaN(fee) || fee < 0) {
+                alert("Consultation fee cannot be negative.");
+                document.getElementById('consultationFee').focus();
+                return false;
+            }
+
+            return confirm("Are you sure you want to process billing for this appointment? This action will execute the MySQL Stored Procedure and finalize payment.");
+        }
+    </script>
 </head>
 <body>
 
 <div class="container">
     <a href="dashboard.jsp" class="back-link no-print">&larr; Back to Dashboard</a>
 
-    <!-- Billing Process Form -->
     <div class="card no-print">
         <h2>Process Patient Billing</h2>
         <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Calculate final treatment fees via Database Stored Procedure.</p>
 
         <% String error = request.getParameter("error"); %>
         <% if (error != null) { %>
-            <div style="color: red; margin-bottom: 15px; font-size: 13px;"><%= error %></div>
+        <div style="color: red; margin-bottom: 15px; font-size: 13px;"><%= error %></div>
         <% } %>
 
-        <form action="process-billing" method="POST" onsubmit="return confirmBilling()">
+        <form action="process-billing" method="POST" onsubmit="return validateBillingForm()">
             <div class="form-group">
                 <label for="appointmentId">Appointment Database ID:</label>
-                <input type="number" id="appointmentId" name="appointmentId" placeholder="e.g. 1" required>
+                <input type="number" id="appointmentId" name="appointmentId" placeholder="e.g. 1" min="1" required>
             </div>
 
             <div class="form-group">
                 <label for="consultationFee">Consultation Fee (LKR):</label>
-                <input type="number" step="0.01" id="consultationFee" name="consultationFee" value="1500.00" required>
+                <input type="number" step="0.01" min="0" id="consultationFee" name="consultationFee" value="1500.00" required>
             </div>
 
             <button type="submit" class="btn-submit">Calculate & Generate Bill</button>
         </form>
     </div>
 
-    <!-- Official Printable Receipt (Visible upon successful calculation) -->
     <% if ("success".equals(status)) { %>
     <div class="receipt-card" id="printableReceipt">
         <div class="receipt-header">
@@ -116,24 +147,24 @@
 
         <table class="invoice-table">
             <thead>
-                <tr>
-                    <th>Description</th>
-                    <th style="text-align: right;">Amount (LKR)</th>
-                </tr>
+            <tr>
+                <th>Description</th>
+                <th style="text-align: right;">Amount (LKR)</th>
+            </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Doctor Consultation Fee</td>
-                    <td style="text-align: right;"><%= String.format("%.2f", consultationFee) %></td>
-                </tr>
-                <tr>
-                    <td>Treatment Charges (Base Fee)</td>
-                    <td style="text-align: right;">Calculated via SP</td>
-                </tr>
-                <tr class="total-row">
-                    <td>Total Paid Amount</td>
-                    <td style="text-align: right;">Processed via Database</td>
-                </tr>
+            <tr>
+                <td>Doctor Consultation Fee</td>
+                <td style="text-align: right;"><%= String.format("%.2f", consultationFee) %></td>
+            </tr>
+            <tr>
+                <td>Treatment Charges (Base Fee)</td>
+                <td style="text-align: right;">Calculated via SP</td>
+            </tr>
+            <tr class="total-row">
+                <td>Total Paid Amount</td>
+                <td style="text-align: right;">Processed via Database</td>
+            </tr>
             </tbody>
         </table>
 
@@ -146,12 +177,6 @@
     <% } %>
 
 </div>
-
-<script>
-    function confirmBilling() {
-        return confirm("Are you sure you want to process billing for this appointment? This action will execute the MySQL Stored Procedure and finalize payment.");
-    }
-</script>
 
 </body>
 </html>

@@ -20,18 +20,18 @@ public class PatientServlet extends HttpServlet {
         String contactNumber = request.getParameter("contactNumber");
         String email = request.getParameter("email");
 
-        // Patient DTO Object එක සකස් කිරීම
+
         Patient patient = new Patient();
         patient.setFullName(fullName);
         patient.setAddress(address);
         patient.setContactNumber(contactNumber);
         patient.setEmail(email);
 
-        // Save to Database via DAO
+
         boolean isSaved = DAOFactory.getPatientDAO().registerPatient(patient);
 
         if (isSaved) {
-            // Patient Code එකත් එක්ක Success Message එක යැවීම
+
             response.sendRedirect(request.getContextPath() + "/patient-reg.jsp?msg=Patient+Registered+Successfully!+Patient+Code:+ " + patient.getPatientCode());
         } else {
             response.sendRedirect(request.getContextPath() + "/patient-reg.jsp?error=Failed+to+register+patient");

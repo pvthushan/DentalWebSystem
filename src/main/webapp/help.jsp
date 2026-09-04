@@ -1,13 +1,16 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.sunrisedental.dto.User" %>
 <%
-    // Session Verification
     User user = (User) session.getAttribute("loggedUser");
-    if (user == null) {
+    if (user == null || user.getFullName() == null || user.getFullName().trim().isEmpty()) {
         response.sendRedirect("login.jsp?error=Unauthorized+Access");
         return;
     }
     String userRole = (String) session.getAttribute("userRole");
+    if (userRole == null || userRole.trim().isEmpty()) {
+        userRole = "GUEST";
+    }
+    String safeUserRole = userRole.replaceAll("[<>]", "");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,12 +28,12 @@
         .header-card h2 { color: #0076be; font-size: 24px; margin-bottom: 5px; }
         .header-card p { color: #666; font-size: 14px; }
 
-        /* Guide Section Cards */
+
         .section-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
         .section-title { font-size: 18px; color: #333; border-bottom: 2px solid #eef2f5; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .role-badge { background: #ffc107; color: #333; font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase; }
 
-        /* Step List Styling */
+
         .step-list { list-style: none; counter-reset: step-counter; }
         .step-list li { position: relative; padding-left: 45px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
         .step-list li::before {
@@ -51,7 +54,7 @@
         }
         .step-title { font-weight: bold; color: #0076be; display: block; margin-bottom: 3px; }
 
-        /* FAQ Accordion Styling */
+
         .faq-item { border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
         .faq-question { background: #f8fafc; padding: 15px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .faq-question:hover { background: #edf2f7; }
@@ -70,8 +73,8 @@
         <p>Welcome to Sunrise Dental Management System. Step-by-step instructions for operational tasks.</p>
     </div>
 
-    <!-- RECEPTIONIST WORKFLOW -->
-    <% if ("RECEPTIONIST".equalsIgnoreCase(userRole) || "SYSTEM_ADMIN".equalsIgnoreCase(userRole)) { %>
+
+    <% if ("RECEPTIONIST".equalsIgnoreCase(safeUserRole) || "SYSTEM_ADMIN".equalsIgnoreCase(safeUserRole)) { %>
     <div class="section-card">
         <div class="section-title">
             Receptionist Workflow Guide <span class="role-badge">Receptionist</span>
@@ -93,8 +96,8 @@
     </div>
     <% } %>
 
-    <!-- DENTIST WORKFLOW -->
-    <% if ("DENTIST".equalsIgnoreCase(userRole) || "SYSTEM_ADMIN".equalsIgnoreCase(userRole)) { %>
+
+    <% if ("DENTIST".equalsIgnoreCase(safeUserRole) || "SYSTEM_ADMIN".equalsIgnoreCase(safeUserRole)) { %>
     <div class="section-card">
         <div class="section-title">
             Dentist Operational Guide <span class="role-badge">Dentist</span>
@@ -112,8 +115,8 @@
     </div>
     <% } %>
 
-    <!-- MANAGER & ADMIN WORKFLOW -->
-    <% if ("CLINIC_MANAGER".equalsIgnoreCase(userRole) || "SYSTEM_ADMIN".equalsIgnoreCase(userRole)) { %>
+
+    <% if ("CLINIC_MANAGER".equalsIgnoreCase(safeUserRole) || "SYSTEM_ADMIN".equalsIgnoreCase(safeUserRole)) { %>
     <div class="section-card">
         <div class="section-title">
             Management & Reporting Guide <span class="role-badge">Manager / Admin</span>
@@ -131,7 +134,7 @@
     </div>
     <% } %>
 
-    <!-- FREQUENTLY ASKED QUESTIONS (FAQ) -->
+
     <div class="section-card">
         <div class="section-title">Frequently Asked Questions (FAQ)</div>
 
@@ -169,10 +172,12 @@
 </div>
 
 <script>
-    // Accordion Toggle Logic
+
     function toggleFaq(element) {
+        if (!element) return;
         const answer = element.nextElementSibling;
         const icon = element.querySelector('span');
+        if (!answer || !icon) return;
 
         if (answer.style.display === "block") {
             answer.style.display = "none";

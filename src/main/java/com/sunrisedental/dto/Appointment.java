@@ -15,7 +15,7 @@ public class Appointment {
 
     public Appointment() {}
 
-    // Getters & Setters
+
     public int getAppointmentId() { return appointmentId; }
     public void setAppointmentId(int appointmentId) { this.appointmentId = appointmentId; }
     public String getAppointmentNumber() { return appointmentNumber; }

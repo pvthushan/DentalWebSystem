@@ -12,6 +12,8 @@ public class BillServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
+        HttpSession session = request.getSession(false);
+        String userRole = (session != null) ? (String) session.getAttribute("userRole") : "";
 
         if ("saveBill".equals(action)) {
             String apptNumber = request.getParameter("appointmentNumber");
@@ -19,7 +21,6 @@ public class BillServlet extends HttpServlet {
             String doctorName = request.getParameter("doctorName");
             String treatmentName = request.getParameter("treatmentName");
 
-            // Null හෝ හිස් අගයන් පාලනය කිරීම සඳහා
             double consultationFee = request.getParameter("consultationFee") != null ? Double.parseDouble(request.getParameter("consultationFee")) : 0.0;
             double treatmentFee = request.getParameter("treatmentFee") != null ? Double.parseDouble(request.getParameter("treatmentFee")) : 0.0;
             double otherFee = request.getParameter("otherFee") != null && !request.getParameter("otherFee").isEmpty() ? Double.parseDouble(request.getParameter("otherFee")) : 0.0;
@@ -39,10 +40,24 @@ public class BillServlet extends HttpServlet {
                 stmt.setDouble(8, subTotal);
 
                 stmt.executeUpdate();
-                response.sendRedirect("manager-calculate-bill.jsp?msg=Bill+Saved+Successfully");
+
+
+                if ("RECEPTIONIST".equalsIgnoreCase(userRole)) {
+                    response.sendRedirect("receptionist-calculate-bill.jsp?msg=Bill+Saved+Successfully");
+                } else if ("CLINIC_MANAGER".equalsIgnoreCase(userRole)) {
+                    response.sendRedirect("manager-calculate-bill.jsp?msg=Bill+Saved+Successfully");
+                } else {
+                    response.sendRedirect("login.jsp");
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect("manager-calculate-bill.jsp?error=Failed+to+save+bill");
+
+                if ("RECEPTIONIST".equalsIgnoreCase(userRole)) {
+                    response.sendRedirect("receptionist-calculate-bill.jsp?error=Failed+to+save+bill");
+                } else {
+                    response.sendRedirect("manager-calculate-bill.jsp?error=Failed+to+save+bill");
+                }
             }
         }
     }

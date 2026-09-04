@@ -6,79 +6,104 @@
     User user = (User) session.getAttribute("loggedUser");
     String userRole = (String) session.getAttribute("userRole");
 
-    if (user == null || !"CLINIC_MANAGER".equalsIgnoreCase(userRole)) {
+    if (user == null || !"RECEPTIONIST".equalsIgnoreCase(userRole)) {
         response.sendRedirect("login.jsp?error=Unauthorized+Access");
         return;
     }
+
+    String safeUsername = (user.getUsername() != null) ? user.getUsername().replaceAll("[<>]", "") : "Receptionist";
 %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sunrise Dental - Calculate Bill</title>
+    <title>Sunrise Dental - Calculate & Print Bill</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; min-height: 100vh; background-color: #f4f7f6; }
-        .sidebar { width: 250px; background-color: #2c3e50; color: white; display: flex; flex-direction: column; padding: 20px 15px; }
-        .sidebar h2 { font-size: 20px; color: #1abc9c; margin-bottom: 30px; }
-        .nav-menu { display: flex; flex-direction: column; gap: 10px; flex: 1; }
-        .nav-btn { display: block; padding: 12px 15px; color: #ecf0f1; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; }
-        .nav-btn:hover, .nav-btn.active { background-color: #1abc9c; color: white; }
-        .btn-logout-sidebar { background-color: #e74c3c; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: auto; }
-        .main-content { flex: 1; padding: 30px 40px; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .header-bar h1 { font-size: 24px; color: #2c3e50; }
-        .bill-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-        .card-box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .card-box h3 { font-size: 18px; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #1abc9c; padding-bottom: 8px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #34495e; margin-bottom: 5px; }
-        .form-control { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-        .receipt-box { background: #fafafa; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; }
-        .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #aaa; padding-bottom: 10px; }
-        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-        .receipt-total { border-top: 1px dashed #aaa; padding-top: 10px; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        .btn-calc { width: 100%; background-color: #1abc9c; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-calc:hover { background-color: #16a085; }
-        .btn-print { width: 100%; background-color: #3498db; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 15px; }
-        .btn-print:hover { background-color: #2980b9; }
 
+        .sidebar { width: 250px; background-color: #1e293b; color: white; display: flex; flex-direction: column; padding: 20px 15px; }
+        .sidebar h2 { font-size: 20px; color: #0ea5e9; margin-bottom: 30px; font-weight: bold; }
+        .nav-menu { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .nav-btn { display: block; padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; transition: 0.2s; }
+        .nav-btn:hover, .nav-btn.active { background-color: #0ea5e9; color: white; }
+        .btn-logout-sidebar { background-color: #ef4444; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: auto; }
+
+        .main-content { flex: 1; padding: 35px 40px; }
+        .header-bar { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h1 { font-size: 26px; color: #0f172a; }
+        .user-badge { font-size: 13px; color: #64748b; }
+
+        .bill-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .card-box { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card-box h3 { font-size: 18px; color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #0ea5e9; padding-bottom: 8px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: #0ea5e9; }
+
+        .receipt-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; }
+        .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #94a3b8; padding-bottom: 10px; }
+        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .receipt-total { border-top: 1px dashed #94a3b8; padding-top: 10px; font-weight: bold; font-size: 16px; margin-top: 10px; color: #0f172a; }
+
+        .btn-calc { width: 100%; background-color: #0ea5e9; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; }
+        .btn-calc:hover { background-color: #0284c7; }
+        .btn-print { width: 100%; background-color: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 15px; }
+        .btn-print:hover { background-color: #0369a1; }
 
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #receiptArea, #receiptArea * {
-                visibility: visible;
-            }
-            #receiptArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                border: none !important;
-                background: white !important;
-            }
-            .btn-print {
-                display: none !important;
-            }
+            .sidebar, .header-bar, .card-box:first-child, .btn-print { display: none !important; }
+            body { background: white; }
+            .main-content { padding: 0; }
+            .bill-container { grid-template-columns: 1fr; }
+            .receipt-box { border: none; }
         }
     </style>
     <script>
+        function updateDetails() {
+            let appt = document.getElementById("apptSelect");
+            let treatment = document.getElementById("treatmentSelect");
+
+            let apptVal = appt.value;
+            let patientName = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? (appt.options[appt.selectedIndex].getAttribute("data-patient") || "") : "";
+            let doctorName = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? (appt.options[appt.selectedIndex].getAttribute("data-doctor-name") || "") : "";
+            let docFee = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? parseFloat(appt.options[appt.selectedIndex].getAttribute("data-doctor") || 0) : 0;
+
+            let treatmentName = treatment.selectedIndex !== -1 && treatment.options[treatment.selectedIndex] ? (treatment.options[treatment.selectedIndex].getAttribute("data-name") || "") : "";
+            let trtFee = parseFloat(treatment.value || 0);
+            let otherFeeVal = parseFloat(document.getElementById("otherFee").value);
+            let otherFee = (isNaN(otherFeeVal) || otherFeeVal < 0) ? 0 : otherFeeVal;
+
+            let total = docFee + trtFee + otherFee;
+
+
+            document.getElementById("hiddenApptNum").value = apptVal;
+            document.getElementById("hiddenPatientName").value = patientName;
+            document.getElementById("hiddenDoctorName").value = doctorName;
+            document.getElementById("hiddenTreatmentName").value = treatmentName;
+            document.getElementById("hiddenDocFee").value = docFee;
+            document.getElementById("hiddenTrtFee").value = trtFee;
+            document.getElementById("hiddenOtherFee").value = otherFee;
+
+
+            document.getElementById("recAppt").innerText = apptVal || "-";
+            document.getElementById("recPatient").innerText = patientName || "-";
+            document.getElementById("recDoctor").innerText = doctorName || "-";
+            document.getElementById("recDocFee").innerText = "Rs. " + docFee.toFixed(2);
+            document.getElementById("recTrtFee").innerText = "Rs. " + trtFee.toFixed(2);
+            document.getElementById("recOtherFee").innerText = "Rs. " + otherFee.toFixed(2);
+            document.getElementById("recTotal").innerText = "Rs. " + total.toFixed(2);
+        }
+
         function validateBillingForm() {
             let apptSelect = document.getElementById("apptSelect");
-            let treatmentSelect = document.getElementById("treatmentSelect");
             let otherFeeInput = document.getElementById("otherFee");
 
             if (!apptSelect.value || apptSelect.value === "") {
                 alert("Please select a confirmed appointment.");
                 apptSelect.focus();
-                return false;
-            }
-
-            if (!treatmentSelect.value && treatmentSelect.value !== "0") {
-                alert("Please select a valid treatment type.");
-                treatmentSelect.focus();
                 return false;
             }
 
@@ -99,9 +124,12 @@
 <div class="sidebar">
     <h2>Sunrise Dental</h2>
     <div class="nav-menu">
-        <a href="manager-doctor-availability" class="nav-btn">🏠 Dashboard</a>
-        <a href="manager-calculate-bill.jsp" class="nav-btn active">💳 Calculate Bill</a>
-        <a href="manager-income-report.jsp" class="nav-btn">📊 Financial Reports</a>
+        <a href="receptionist-dashboard.jsp" class="nav-btn">🏠 Dashboard</a>
+        <a href="doctor-availability" class="nav-btn">👨‍⚕️ Doctor Availability</a>
+        <a href="receptionist-new-appointment.jsp" class="nav-btn">➕ New Appointment</a>
+        <a href="receptionist-search-appointment.jsp" class="nav-btn">🔍 Search Appointments</a>
+        <a href="receptionist-calculate-bill.jsp" class="nav-btn active">💳 Calculate Bill</a>
+        <a href="receptionist-help.jsp" class="nav-btn">❓ Help Section</a>
     </div>
     <a href="auth?action=logout" class="btn-logout-sidebar">Logout</a>
 </div>
@@ -109,6 +137,7 @@
 <div class="main-content">
     <div class="header-bar">
         <h1>💳 Calculate & Print Patient Bill</h1>
+        <div class="user-badge">User: <strong><%= safeUsername %></strong></div>
     </div>
 
     <div class="bill-container">
@@ -195,7 +224,6 @@
             </form>
         </div>
 
-
         <div class="card-box">
             <h3>Receipt Preview</h3>
             <div class="receipt-box" id="receiptArea">
@@ -217,39 +245,5 @@
     </div>
 </div>
 
-<script>
-    function updateDetails() {
-        let appt = document.getElementById("apptSelect");
-        let treatment = document.getElementById("treatmentSelect");
-
-        let apptVal = appt.value;
-        let patientName = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? (appt.options[appt.selectedIndex].getAttribute("data-patient") || "") : "";
-        let doctorName = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? (appt.options[appt.selectedIndex].getAttribute("data-doctor-name") || "") : "";
-        let docFee = appt.selectedIndex !== -1 && appt.options[appt.selectedIndex] ? parseFloat(appt.options[appt.selectedIndex].getAttribute("data-doctor") || 0) : 0;
-
-        let treatmentName = treatment.selectedIndex !== -1 && treatment.options[treatment.selectedIndex] ? (treatment.options[treatment.selectedIndex].getAttribute("data-name") || "") : "";
-        let trtFee = parseFloat(treatment.value || 0);
-        let otherFeeVal = parseFloat(document.getElementById("otherFee").value);
-        let otherFee = (isNaN(otherFeeVal) || otherFeeVal < 0) ? 0 : otherFeeVal;
-
-        let total = docFee + trtFee + otherFee;
-
-        document.getElementById("hiddenApptNum").value = apptVal;
-        document.getElementById("hiddenPatientName").value = patientName;
-        document.getElementById("hiddenDoctorName").value = doctorName;
-        document.getElementById("hiddenTreatmentName").value = treatmentName;
-        document.getElementById("hiddenDocFee").value = docFee;
-        document.getElementById("hiddenTrtFee").value = trtFee;
-        document.getElementById("hiddenOtherFee").value = otherFee;
-
-        document.getElementById("recAppt").innerText = apptVal || "-";
-        document.getElementById("recPatient").innerText = patientName || "-";
-        document.getElementById("recDoctor").innerText = doctorName || "-";
-        document.getElementById("recDocFee").innerText = "Rs. " + docFee.toFixed(2);
-        document.getElementById("recTrtFee").innerText = "Rs. " + trtFee.toFixed(2);
-        document.getElementById("recOtherFee").innerText = "Rs. " + otherFee.toFixed(2);
-        document.getElementById("recTotal").innerText = "Rs. " + total.toFixed(2);
-    }
-</script>
 </body>
 </html>

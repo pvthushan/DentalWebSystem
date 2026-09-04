@@ -10,6 +10,7 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, select { width: 100%; padding: 8px; box-sizing: border-box; }
         .btn { background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; border-radius: 4px; }
+        .btn:hover { background-color: #218838; }
         .error { color: red; font-size: 12px; }
     </style>
 </head>
@@ -20,15 +21,16 @@
     <form id="apptForm" action="api/appointment" method="POST" onsubmit="return validateForm()">
         <div class="form-group">
             <label>Patient ID / Code:</label>
-            <input type="number" id="patientId" name="patientId" placeholder="e.g. 1001" required>
+            <input type="number" id="patientId" name="patientId" placeholder="e.g. 1001" min="1" required>
         </div>
         <div class="form-group">
             <label>Dentist ID:</label>
-            <input type="number" id="dentistId" name="dentistId" required>
+            <input type="number" id="dentistId" name="dentistId" placeholder="e.g. 1" min="1" required>
         </div>
         <div class="form-group">
             <label>Treatment Type:</label>
             <select name="treatmentId" id="treatmentId" required>
+                <option value="" disabled selected>Select a treatment</option>
                 <option value="1">General Consultation (Rs. 1,500)</option>
                 <option value="2">Tooth Extraction (Rs. 3,500)</option>
                 <option value="3">Dental Cleaning (Rs. 5,000)</option>
@@ -44,18 +46,41 @@
 </div>
 
 <script>
-    // JavaScript Client-side Input Validation
+
     function validateForm() {
+        const patientId = document.getElementById("patientId").value;
+        const dentistId = document.getElementById("dentistId").value;
+        const treatmentId = document.getElementById("treatmentId").value;
         const datetime = document.getElementById("datetime").value;
+
+        if (parseInt(patientId) <= 0 || isNaN(patientId)) {
+            alert("Please enter a valid positive Patient ID.");
+            return false;
+        }
+
+        if (parseInt(dentistId) <= 0 || isNaN(dentistId)) {
+            alert("Please enter a valid positive Dentist ID.");
+            return false;
+        }
+
+        if (!treatmentId || treatmentId === "") {
+            alert("Please select a valid treatment type.");
+            return false;
+        }
+
         if (!datetime) {
             alert("Please select a valid appointment date and time.");
             return false;
         }
+
         const selectedDate = new Date(datetime);
-        if (selectedDate < new Date()) {
-            alert("Appointment date cannot be in the past!");
+        const currentDate = new Date();
+
+        if (selectedDate < currentDate) {
+            alert("Appointment date and time cannot be in the past!");
             return false;
         }
+
         return true;
     }
 </script>

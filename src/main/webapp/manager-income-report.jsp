@@ -67,7 +67,7 @@
         double grandTotalRevenue = 0.0;
     %>
 
-    <!-- Metrics Cards Section -->
+
     <div class="metrics-grid">
         <div class="metric-card">
             <div class="metric-label">TOTAL BILLED APPOINTMENTS</div>
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-    <!-- Detailed Breakdown Table -->
+
     <table>
         <thead>
         <tr>
@@ -128,7 +128,7 @@
 </div>
 
 <script>
-    // Metrics dynamic update
+
     document.getElementById("totalCount").innerText = "<%= totalBills %>";
     document.getElementById("grossRevenue").innerText = "Rs. <%= String.format("%.2f", grandTotalRevenue) %>";
 </script>

@@ -22,7 +22,7 @@ public class AuthenticationFilter implements Filter {
 
         boolean isLoggedIn = (session != null && session.getAttribute("loggedUser") != null);
 
-        // Allow login page, auth servlet, and CSS/JS/images if any
+
         boolean isLoginRequest = uri.endsWith("login.jsp") || uri.endsWith("/auth");
         boolean isStaticResource = uri.contains(".css") || uri.contains(".js") || uri.contains(".png");
 

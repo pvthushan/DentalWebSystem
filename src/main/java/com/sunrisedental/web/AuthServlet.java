@@ -3,6 +3,7 @@ package com.sunrisedental.web;
 import com.sunrisedental.dao.UserDAO;
 import com.sunrisedental.factory.DAOFactory;
 import com.sunrisedental.dto.User;
+import com.sunrisedental.util.SystemLogger;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -69,10 +70,11 @@ public class AuthServlet extends HttpServlet {
 
                 session.setMaxInactiveInterval(30 * 60);
 
-                // Role-Based Access Control Redirection Paths
+                SystemLogger.logAction(user.getUsername(), "User logged into the system");
+
                 switch (user.getRoleName().toUpperCase()) {
                     case "SYSTEM_ADMIN":
-                        response.sendRedirect("admin-dashboard.jsp");
+                        response.sendRedirect("admin-dashboard");
                         break;
                     case "CLINIC_MANAGER":
                         response.sendRedirect("manager-dashboard.jsp");
@@ -88,6 +90,7 @@ public class AuthServlet extends HttpServlet {
                         break;
                 }
             } else {
+                SystemLogger.logAction(username.trim(), "Failed login attempt with invalid credentials");
                 response.sendRedirect("login.jsp?error=Invalid+Username+or+Password");
             }
         } catch (Exception e) {
@@ -100,7 +103,16 @@ public class AuthServlet extends HttpServlet {
             throws IOException {
 
         HttpSession session = request.getSession(false);
+        String loggedOutUser = "Unknown";
+
         if (session != null) {
+            User user = (User) session.getAttribute("loggedUser");
+            if (user != null) {
+                loggedOutUser = user.getUsername();
+            }
+
+            SystemLogger.logAction(loggedOutUser, "User logged out of the system");
+
             session.removeAttribute("loggedUser");
             session.removeAttribute("userRole");
             session.removeAttribute("userId");

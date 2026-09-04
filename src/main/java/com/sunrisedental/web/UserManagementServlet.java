@@ -20,8 +20,8 @@ public class UserManagementServlet extends HttpServlet {
             String password = request.getParameter("password");
             String userRole = request.getParameter("userRole");
 
-            // Role නමට අදාළ role_id එක ලබා ගැනීම (ඔබේ roles වගුවට අනුව)
-            int roleId = 3; // Default Receptionist
+
+            int roleId = 3;
             if ("CLINIC_MANAGER".equalsIgnoreCase(userRole)) {
                 roleId = 2;
             } else if ("SYSTEM_ADMIN".equalsIgnoreCase(userRole)) {
@@ -32,16 +32,16 @@ public class UserManagementServlet extends HttpServlet {
                 int userId = Integer.parseInt(userIdStr);
 
                 if (userId == 0) {
-                    // නව User කෙනෙක් ඇතුළත් කිරීම (Insert)
+
                     String sql = "INSERT INTO users (username, password_hash, full_name, role_id, is_active) VALUES (?, ?, ?, ?, TRUE)";
                     PreparedStatement stmt = conn.prepareStatement(sql);
                     stmt.setString(1, username);
-                    stmt.setString(2, password); // නිෂ්පාදනයේදී Hash කිරීම කළ යුතුය
+                    stmt.setString(2, password);
                     stmt.setString(3, fullName);
                     stmt.setInt(4, roleId);
                     stmt.executeUpdate();
                 } else {
-                    // පවතින User කෙනෙකුගේ තොරතුරු යාවත්කාලීන කිරීම (Update)
+
                     String sql;
                     PreparedStatement stmt;
                     if (password != null && !password.trim().isEmpty()) {
